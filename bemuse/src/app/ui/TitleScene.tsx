@@ -16,6 +16,7 @@ import { SceneManagerContext } from 'bemuse/scene-manager'
 import Toolbar from './Toolbar'
 import { selectOptions } from '../redux/ReduxState'
 import version from 'bemuse/utils/version'
+import SDKMusicSelectScene from './SDKMusicSelectScene'
 
 const HAS_PARENT = (() => {
   try {
@@ -90,6 +91,11 @@ const TitleScene = () => {
     Analytics.send('TitleScene', 'enter game')
   }
 
+  const enterSdkMode = () => {
+    sceneManager.push(<SDKMusicSelectScene />)
+    Analytics.send('TitleScene', 'enter sdk mode')
+  }
+
   const showAbout = () => {
     sceneManager.push(<AboutScene />)
     Analytics.send('TitleScene', 'show about')
@@ -118,9 +124,22 @@ const TitleScene = () => {
             <img src={require('./images/logo-with-shadow.svg')} />
           </div>
           <div className='TitleSceneのenter'>
-            <a onClick={enterGame} data-testid='enter-game'>
-              Enter Game
-            </a>
+            <div className='TitleSceneのmode' onClick={enterGame} data-testid='enter-game'>
+              <div className='TitleSceneのmodeTitle'>
+                Classic Mode
+              </div>
+              <div className='TitleSceneのmodeDesc'>
+                Play BMS beatmaps from music servers
+              </div>
+            </div>
+            <div className='TitleSceneのmode' onClick={enterSdkMode} data-testid='enter-sdk-mode'>
+              <div className='TitleSceneのmodeTitle'>
+                ▶ MusicStream
+              </div>
+              <div className='TitleSceneのmodeDesc'>
+                Auto-generated charts from synced lyrics
+              </div>
+            </div>
           </div>
         </div>
         {shouldShowHomepage ? (

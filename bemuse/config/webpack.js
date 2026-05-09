@@ -28,6 +28,13 @@ function generateBaseConfig() {
         publicPath: '/',
         stats: { colors: true, chunkModules: false },
       },
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          pathRewrite: { '^/api': '/api' },
+        },
+      },
       setupMiddlewares: (middlewares, devServer) => {
         devServer.app.use('/', express.static(path('..', 'public')))
         for (const route of routes) {

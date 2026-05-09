@@ -83,22 +83,43 @@
     animation: 0.8s TitleSceneのenterFadeIn;
     display: flex;
     justify-content: center;
+    gap: 1.5em;
+    padding: 0 1em;
+    flex-wrap: wrap;
+  }
+
+  &のmode {
+    color: rgba(black, 0.9);
+    background: rgba(#fff, 0.85);
+    padding: 1ex 2ex;
+    border-radius: 1em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
     cursor: pointer;
-    > a {
-      color: rgba(black, 0.9);
-      font-size: 3rem;
-      background: rgba(#fff, 0.8);
-      padding: 0.5ex 1.2ex;
-      border-radius: 2em;
-      display: block;
-      text-decoration: none;
-      transform: scale(1);
-      transition: 0.1s transform, 0.1s background;
-      &:hover {
-        background: rgba(#fff, 1);
-        transform: scale(1.1);
-      }
+    min-width: 240px;
+    transform: scale(1);
+    transition: 0.15s transform, 0.15s background, 0.15s box-shadow;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    &:hover {
+      background: rgba(#fff, 1);
+      transform: scale(1.06);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
     }
+  }
+
+  &のmodeTitle {
+    font-size: 2.2rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  &のmodeDesc {
+    font-size: 1rem;
+    opacity: 0.6;
+    margin-top: 0.3ex;
+    font-weight: 400;
   }
 
   // HACK: fade in

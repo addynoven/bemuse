@@ -1,0 +1,210 @@
+:root {
+  --sdk-loading-easy:   #4ade80;
+  --sdk-loading-normal: #4a9eff;
+  --sdk-loading-hard:   #fb923c;
+  --sdk-loading-expert: #f472b6;
+}
+
+@keyframes sdkLoadingPulse {
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 0.07; }
+}
+
+@keyframes sdkShimmerDrift {
+  0%   { transform: translateX(-60%) skewX(-18deg); }
+  100% { transform: translateX(160%) skewX(-18deg); }
+}
+
+@keyframes sdkThumbFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+.SDKLoadingScene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  color: #fff;
+
+  &__bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #0a1428 0%, #1a0a28 100%);
+    z-index: 0;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 25% 35%, rgba(74, 158, 255, 0.18) 0%, transparent 55%),
+        radial-gradient(ellipse at 75% 65%, rgba(138, 74, 255, 0.12) 0%, transparent 50%);
+      animation: sdkLoadingPulse 7s ease-in-out infinite;
+    }
+  }
+
+  &__shimmer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(
+      120deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.03) 50%,
+      transparent 100%
+    );
+    animation: sdkShimmerDrift 5s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  &__inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 2rem;
+    box-sizing: border-box;
+    gap: 1.5rem;
+  }
+
+  &__thumbWrap {
+    position: relative;
+    width: 280px;
+    height: 158px;
+    flex-shrink: 0;
+    animation: sdkThumbFloat 4s ease-in-out infinite;
+  }
+
+  &__thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+    display: block;
+  }
+
+  &__thumbPlaceholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.07);
+  }
+
+  &__thumbHalo {
+    position: absolute;
+    inset: -16px;
+    border-radius: 20px;
+    background: radial-gradient(
+      ellipse at 50% 50%,
+      rgba(74, 158, 255, 0.2) 0%,
+      transparent 70%
+    );
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  &__songInfo {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  &__songTitle {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.2;
+    max-width: 560px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__songArtist {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  &__diffPill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.3rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+
+    &--easy   { color: var(--sdk-loading-easy);   border-color: rgba(74, 222, 128, 0.35); }
+    &--normal { color: var(--sdk-loading-normal); border-color: rgba(74, 158, 255, 0.35); }
+    &--hard   { color: var(--sdk-loading-hard);   border-color: rgba(251, 146, 60, 0.35); }
+    &--expert { color: var(--sdk-loading-expert); border-color: rgba(244, 114, 182, 0.35); }
+  }
+
+  &__noteCount {
+    font-weight: 400;
+    opacity: 0.7;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+  }
+
+  &__metaRow {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.2rem;
+  }
+
+  &__bpm,
+  &__key {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.06em;
+  }
+
+  &__progressWrap {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__progressTrack {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+  }
+
+  &__progressFill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #4a9eff 0%, #a78bfa 100%);
+    transition: width 0.3s ease;
+    box-shadow: 0 0 8px rgba(74, 158, 255, 0.5);
+  }
+
+  &__progressLabel {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+  }
+}

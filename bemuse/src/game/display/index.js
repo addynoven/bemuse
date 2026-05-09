@@ -27,6 +27,7 @@ export class GameDisplay {
     })
     this._createTouchEscapeButton()
     this._createFullScreenButton()
+    this._createKeyHintOverlay()
     this._escapeHintShown = false
   }
 
@@ -181,6 +182,51 @@ export class GameDisplay {
       'game-display--touch-fullscreen-button'
     )
     touchButtons.appendChild(button)
+  }
+
+  _createKeyHintOverlay() {
+    const player = this._game.players[0]
+    const kbm = player.options.input.keyboard
+    if (!kbm) return
+
+    const keyNames = {
+      8: 'Bksp', 9: 'Tab', 13: 'Enter', 16: 'Shift', 17: 'Ctrl',
+      18: 'Alt', 20: 'Caps', 27: 'Esc', 32: '␣',
+      33: 'PgUp', 34: 'PgDn', 35: 'End', 36: 'Home',
+      37: '←', 38: '↑', 39: '→', 40: '↓',
+      45: 'Ins', 46: 'Del',
+      48: '0', 49: '1', 50: '2', 51: '3', 52: '4',
+      53: '5', 54: '6', 55: '7', 56: '8', 57: '9',
+      65: 'A', 66: 'B', 67: 'C', 68: 'D', 69: 'E', 70: 'F',
+      71: 'G', 72: 'H', 73: 'I', 74: 'J', 75: 'K', 76: 'L',
+      77: 'M', 78: 'N', 79: 'O', 80: 'P', 81: 'Q', 82: 'R',
+      83: 'S', 84: 'T', 85: 'U', 86: 'V', 87: 'W', 88: 'X',
+      89: 'Y', 90: 'Z',
+      112: 'F1', 113: 'F2', 114: 'F3', 115: 'F4',
+      116: 'F5', 117: 'F6', 118: 'F7', 119: 'F8',
+      120: 'F9', 121: 'F10', 122: 'F11', 123: 'F12',
+      186: ';', 187: '=', 188: ',', 189: '-', 190: '.',
+      191: '/', 192: '`', 219: '[', 220: '\\', 221: ']',
+      222: "'",
+    }
+
+    const getLabel = (code) => {
+      const num = parseInt(code, 10)
+      return keyNames[num] || String.fromCharCode(num)
+    }
+
+    const container = document.createElement('div')
+    container.className = 'game-display--key-hints'
+
+    const columns = ['1', '2', '3', '4', '5', '6', '7']
+    for (const col of columns) {
+      const hint = document.createElement('div')
+      hint.className = 'game-display--key-hint'
+      hint.textContent = getLabel(kbm[col])
+      container.appendChild(hint)
+    }
+
+    this.wrapper.appendChild(container)
   }
 
   get context() {

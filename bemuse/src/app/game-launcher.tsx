@@ -11,6 +11,7 @@ import LoadingScene from 'bemuse/game/ui/LoadingScene'
 import { MISSED } from 'bemuse/game/judgments'
 import Player from 'bemuse/game/player'
 import PlayerState from 'bemuse/game/state/player-state'
+import { PlayerStats } from 'bemuse/game/state/player-stats'
 import React from 'react'
 import ResultScene from './ui/ResultScene'
 import { StoredOptions } from './types'
@@ -39,6 +40,25 @@ export type LaunchOptions = {
   onRagequitted: () => void
   autoplayEnabled: boolean
   sceneManager: SceneManager
+  // Fires with raw PlayerStats when the game finishes (state.finished === true).
+  // Not fired if the user quits mid-song.
+  onResult?: (stats: PlayerStats) => void
+  // When true, bemuse's built-in ResultScene is skipped — caller owns the result UI.
+  skipResultScene?: boolean
+  // Fires the moment before controller.start() — used by SDK mode to start
+  // continuous background audio in lockstep with bemuse's game clock.
+  // Awaited so async callers can confirm hardware playback before the clock starts.
+  onGameStart?: () => void | Promise<void>
+  // When provided, replaces bemuse's default LoadingScene with the caller's UI.
+  loadingSceneFactory?: (props: {
+    tasks: any
+    song: Chart['info']
+    eyecatchImagePromise: PromiseLike<HTMLImageElement>
+  }) => JSX.Element
+  // Fires once per judgment event (each frame, after bemuse updates state).
+  // judgment mirrors Judgment enum: Meticulous=1, Precise=2, Good=3, Offbeat=4, Missed=-1.
+  // deltaTime is the hit offset in seconds (negative=early, positive=late).
+  onJudgment?: (event: { judgment: number; deltaTime: number }) => void
 }
 
 export async function launch(launchOptions: LaunchOptions) {
@@ -79,6 +99,11 @@ async function launchGame(
     saveLeadTime,
     onRagequitted,
     autoplayEnabled,
+    onResult,
+    skipResultScene,
+    onGameStart,
+    onJudgment,
+    loadingSceneFactory,
   }: LaunchOptions,
   sceneDisplayContext: SceneDisplayContext,
   setCurrentWork: (work: string) => void
@@ -162,14 +187,17 @@ async function launchGame(
     const loader = GameLoader.load(loadSpec)
     const { tasks, promise } = loader
 
-    // display loading scene
-    const loadingScene = (
-      <LoadingScene
-        tasks={tasks}
-        song={chart.info}
-        eyecatchImagePromise={loader.get('EyecatchImage')}
-      />
-    )
+    // display loading scene — use caller-supplied factory if provided
+    const eyecatchImagePromise = loader.get('EyecatchImage')
+    const loadingScene = loadingSceneFactory
+      ? loadingSceneFactory({ tasks, song: chart.info, eyecatchImagePromise })
+      : (
+          <LoadingScene
+            tasks={tasks}
+            song={chart.info}
+            eyecatchImagePromise={eyecatchImagePromise}
+          />
+        )
     await sceneDisplayContext.showScene(loadingScene)
     replay = false
 
@@ -184,7 +212,31 @@ async function launchGame(
     const controller = await promise
     setCurrentWork('running the game')
     await sceneDisplayContext.showScene(GameScene(controller.display))
+    await onGameStart?.()
     controller.start()
+
+    // Drain bemuse's per-frame judgment notifications. Registered AFTER
+    // controller.start() so our RAF fires after bemuse's frame callback,
+    // which is when notifications.judgments has been populated for that frame.
+    let pollingJudgments = true
+    if (onJudgment) {
+      const pollJudgments = () => {
+        if (!pollingJudgments) return
+        try {
+          const ps = controller.state.player(controller.state.game.players[0])
+          for (const entry of ps.notifications.judgments) {
+            const j = entry as { judgment?: number; deltaTime?: number }
+            if (typeof j.judgment === 'number') {
+              onJudgment({ judgment: j.judgment, deltaTime: j.deltaTime ?? 0 })
+            }
+          }
+        } catch {
+          // Controller state may be partially torn down near game end — swallow.
+        }
+        requestAnimationFrame(pollJudgments)
+      }
+      requestAnimationFrame(pollJudgments)
+    }
 
     // send the timing data
     const loadFinish = Date.now()
@@ -198,6 +250,7 @@ async function launchGame(
 
     // wait for final game state
     const playResult = await controller.promise
+    pollingJudgments = false
     setCurrentWork('handling game results')
 
     const state = controller.state
@@ -215,13 +268,18 @@ async function launchGame(
     if (state.finished) {
       setCurrentWork('showing game results')
       Analytics.gameFinish(song, chart, state, gameMode)
-      const exitResult = await showResult(
-        player,
-        playerState,
-        chart,
-        sceneDisplayContext
-      )
-      replay = exitResult.replay
+      onResult?.(playerState.stats)
+      if (skipResultScene) {
+        replay = false
+      } else {
+        const exitResult = await showResult(
+          player,
+          playerState,
+          chart,
+          sceneDisplayContext
+        )
+        replay = exitResult.replay
+      }
     } else {
       setCurrentWork('exiting the game')
       Analytics.gameEscape(song, chart, state)
